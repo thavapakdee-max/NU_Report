@@ -62,3 +62,18 @@ Copy-Item .env.example .env
 ## ความปลอดภัยก่อนใช้งานจริง
 
 ตั้ง SECRET_KEY แบบสุ่มและเก็บใน environment, เปิด HTTPS และตั้ง COOKIE_SECURE=1 ใน production ใช้บัญชี MySQL สิทธิ์จำกัด และใช้ create-admin สำหรับบัญชีเจ้าหน้าที่ ห้ามใช้ root หรือฝังรหัสผ่านไว้ในโค้ด
+
+ชื่อผู้ใช้แอดมินคือ admin ครับ ส่วนรหัสผ่านที่สร้างไว้ก่อนหน้านี้คือ Nu-1JevdfydqLv1qv6Y5NlBcfmW!
+
+
+
+## เปิด powershell
+cd C:\Users\Administrator\Desktop\Report
+.\.venv\Scripts\Activate.ps1
+python -m flask --app app run --debug
+
+
+
+
+cd C:\Users\Administrator\Desktop\Report
+.\.venv\Scripts\python.exe -m flask --app app run --host 127.0.0.1
