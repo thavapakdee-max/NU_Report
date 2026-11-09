@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}ระบบประเมินความพึงพอใจของนายจ้าง{% endblock %}
+{% block content %}
+<main class="home-shell">
+  <div class="home-brand"><img class="brand-seal logo-image" src="{{ url_for('static', filename='images/logo.png') }}" alt="ตรามหาวิทยาลัยนเรศวร"><div><strong>บัณฑิตวิทยาลัย</strong><span>มหาวิทยาลัยนเรศวร</span></div></div>
+  <section class="home-hero">
+    <span class="eyebrow">EMPLOYER SATISFACTION SYSTEM</span>
+    <h1>ระบบประเมิน<br>ความพึงพอใจของนายจ้าง</h1>
+    <p>ระบบประเมินออนไลน์และสรุปผลสำหรับติดตามคุณภาพบัณฑิต</p>
+    <div class="home-actions">
+      <a class="button button-primary" href="{{ url_for('admin_login') }}">เข้าสู่ระบบเจ้าหน้าที่ <span>→</span></a>
+      <span class="home-note">ผู้ประเมินเข้าผ่านลิงก์เชิญที่ได้รับจากเจ้าหน้าที่</span>
+    </div>
+  </section>
+  <div class="home-footer">เดโมระบบ · แยกพื้นที่ผู้ประเมินและเจ้าหน้าที่</div>
+</main>
+{% endblock %}

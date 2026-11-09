@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}ส่งแบบประเมินสำเร็จ{% endblock %}
+{% block content %}
+<main class="success-shell">
+  <div class="success-mark">✓</div>
+  <span class="eyebrow">SUBMITTED</span>
+  <h1>ส่งแบบประเมินสำเร็จ</h1>
+  <p>บันทึกผลของ <strong>{{ graduate.code }}</strong> แล้ว</p>
+  <a class="button button-primary" href="{{ url_for('survey', token=link.token) }}">กลับไปยังรายชื่อบัณฑิต</a>
+</main>
+{% endblock %}

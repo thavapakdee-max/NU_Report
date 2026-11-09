@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}แดชบอร์ดเจ้าหน้าที่{% endblock %}
+{% block head %}<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>{% endblock %}
+{% block body_class %}admin-page{% endblock %}
+{% block content %}
+<div class="admin-shell">
+  <aside class="sidebar">
+    <a class="admin-brand" href="{{ url_for('admin_dashboard') }}"><img class="brand-seal logo-image" src="{{ url_for('static', filename='images/logo.png') }}" alt="ตรามหาวิทยาลัยนเรศวร"><div><strong>NU Graduate</strong><span>ระบบประเมินความพึงพอใจนายจ้าง</span></div></a>
+    <div class="side-label">เมนูหลัก</div>
+    <nav class="side-nav">
+      <a class="{% if not report_mode %}active{% endif %}" href="{{ url_for('admin_dashboard', faculty=faculty_id) }}"><span class="side-icon">▦</span>ภาพรวมผลประเมิน</a>
+      <a class="{% if report_mode %}active{% endif %}" href="{{ url_for('admin_dashboard', faculty=faculty_id, view='report') }}"><span class="side-icon">▥</span>รายงานกราฟ</a>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="admin-profile"><div class="avatar">A</div><div><strong>{{ current_user.username }}</strong><span>เจ้าหน้าที่</span></div></div>
+      <form method="post" action="{{ url_for('admin_logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="logout-button" type="submit">ออกจากระบบ</button></form>
+    </div>
+  </aside>
+  <main class="admin-main">
+    <header class="topbar"><div class="mobile-brand"><img class="brand-seal logo-image" src="{{ url_for('static', filename='images/logo.png') }}" alt="ตรามหาวิทยาลัยนเรศวร"> Graduate Evaluation</div><div class="topbar-right"><span class="round-label">{{ round_row.name if round_row else "ยังไม่มีรอบประเมิน" }} · {{ round_row.academic_year if round_row else "" }}</span></div></header>
+    <div class="page-content">
+      {% if report_mode %}
+      <div class="page-heading"><div><span class="eyebrow">ส่วนที่ 3 · สรุปภาพรวม</span><h1>รายงานเปรียบเทียบระดับคณะ</h1><p>กราฟสรุปจำนวนผู้ประเมินและอัตราการตอบกลับ แยกตามคณะ</p></div><a class="button button-secondary" href="{{ url_for('admin_dashboard', faculty=faculty_id) }}">← กลับภาพรวม</a></div>
+      <section class="report-panel">
+        <div class="report-panel-head"><div><h2>อัตราการตอบแบบประเมิน</h2><p>จำนวนผลประเมินที่ส่งแล้ว ÷ จำนวนบัณฑิตทั้งหมด</p></div><span class="chart-unit">ร้อยละ</span></div>
+        <div class="chart-wrap chart-wrap-tall"><canvas id="facultyChart" aria-label="กราฟแท่งอัตราการตอบแบบประเมินแยกตามคณะ"></canvas></div>
+      </section>
+      <section class="report-panel">
+        <div class="report-panel-head"><div><h2>สรุปตัวเลขรายคณะ</h2><p>รอบประเมิน {{ round_row.name if round_row else "" }}</p></div></div>
+        <div class="table-scroll"><table class="data-table"><thead><tr><th>คณะ</th><th>บัณฑิต</th><th>ประเมินแล้ว</th><th>อัตราตอบกลับ</th><th>เฉลี่ยตอนที่ 3</th><th>เฉลี่ยตอนที่ 4</th></tr></thead><tbody>
+          {% for row in faculty_rows %}<tr><td><strong>{{ row.name }}</strong></td><td>{{ row.graduates }}</td><td>{{ row.completed }}</td><td><span class="rate-pill">{{ row.rate }}%</span></td><td>{{ "%.2f"|format(row.average3) if row.average3 else "—" }}</td><td>{{ "%.2f"|format(row.average4) if row.average4 else "—" }}</td></tr>{% endfor %}
+        </tbody></table></div>
+      </section>
+      {% else %}
+      <div class="page-heading"><div><span class="eyebrow">ส่วนที่ 2 · วิเคราะห์ผล</span><h1>ภาพรวมผลการประเมิน</h1><p>ติดตามการตอบกลับและคะแนนของผู้ใช้บัณฑิต</p></div><a class="button button-secondary" href="{{ url_for('admin_dashboard', faculty=faculty_id, view='report') }}">ดูรายงานกราฟ <span>→</span></a></div>
+      <form class="filter-bar" method="get" action="{{ url_for('admin_dashboard') }}">
+        <label>คณะ<select name="faculty" id="facultyFilter" onchange="this.form.submit()">{% for faculty in faculties %}<option value="{{ faculty.id }}" {% if faculty.id == faculty_id %}selected{% endif %}>{{ faculty.name }}</option>{% endfor %}</select></label>
+        <label>สาขาวิชา<select name="department" onchange="this.form.submit()"><option value="">ทุกสาขาในคณะ</option>{% for department in departments %}<option value="{{ department.id }}" {% if department.id == department_id %}selected{% endif %}>{{ department.name }}</option>{% endfor %}</select></label>
+        <input type="hidden" name="view" value="dashboard">
+        <span class="filter-period">รอบ {{ round_row.academic_year if round_row else "—" }}</span>
+      </form>
+      <section class="metric-grid">
+        <article class="metric-card"><div class="metric-icon icon-blue">◎</div><span>บัณฑิตทั้งหมด</span><strong>{{ total }}</strong><small>{{ selected_department.name if selected_department else "ในคณะที่เลือก" }}</small></article>
+        <article class="metric-card"><div class="metric-icon icon-green">✓</div><span>ประเมินแล้ว</span><strong>{{ completed }}</strong><small>ได้รับคำตอบแล้ว</small></article>
+        <article class="metric-card"><div class="metric-icon icon-orange">◷</div><span>รอประเมิน</span><strong>{{ pending }}</strong><small>ยังไม่ได้รับคำตอบ</small></article>
+        <article class="metric-card"><div class="metric-icon icon-purple">↗</div><span>อัตราตอบกลับ</span><strong>{{ rate }}<i>%</i></strong><small>ประเมินแล้ว ÷ บัณฑิตทั้งหมด</small></article>
+      </section>
+      <section class="dashboard-grid">
+        <article class="panel chart-panel">
+          <div class="panel-heading"><div><h2>{% if selected_department %}ผลตอบกลับของ {{ selected_department.name }}{% else %}เปรียบเทียบสาขาในคณะ{% endif %}</h2><p>จำนวนบัณฑิตเทียบกับจำนวนที่ประเมินแล้ว</p></div><span class="chart-dot"></span></div>
+          <div class="chart-wrap"><canvas id="departmentChart" aria-label="กราฟจำนวนบัณฑิตและผลประเมินตามสาขา"></canvas></div>
+        </article>
+        <article class="panel average-panel"><div class="panel-heading"><div><h2>คะแนนเฉลี่ย</h2><p>แยกตามตอนประเมิน</p></div></div>
+          <div class="average-pair"><div><span>ตอนที่ 3</span><strong>{{ "%.2f"|format(average3) if average3 else "—" }}<small>/ 5</small></strong></div><div><span>ตอนที่ 4</span><strong>{{ "%.2f"|format(average4) if average4 else "—" }}<small>/ 5</small></strong></div></div>
+          <div class="average-caption">คำนวณจากคะแนนที่ได้รับในตัวกรองนี้</div>
+        </article>
+      </section>
+      <section class="panel table-panel">
+        <div class="panel-heading"><div><h2>สรุปผลตามสาขาวิชา</h2><p>เลือกคณะด้านบนเพื่อดูสาขาที่ต้องการ</p></div><span class="table-count">{{ dept_rows|length }} สาขา</span></div>
+        <div class="table-scroll"><table class="data-table"><thead><tr><th>สาขาวิชา</th><th>บัณฑิต</th><th>ประเมินแล้ว</th><th>รอประเมิน</th><th>อัตราตอบกลับ</th><th>เฉลี่ยตอนที่ 3</th><th>เฉลี่ยตอนที่ 4</th></tr></thead><tbody>
+          {% for row in dept_rows %}<tr><td><a class="dept-link" href="{{ url_for('admin_dashboard', faculty=faculty_id, department=row.id) }}">{{ row.name }}</a></td><td>{{ row.graduates }}</td><td>{{ row.completed }}</td><td>{{ row.graduates - row.completed }}</td><td><div class="table-rate"><div class="mini-track"><i style="width:{{ row.rate }}%"></i></div><span>{{ row.rate }}%</span></div></td><td>{{ "%.2f"|format(row.average3) if row.average3 else "—" }}</td><td>{{ "%.2f"|format(row.average4) if row.average4 else "—" }}</td></tr>{% else %}<tr><td colspan="7" class="empty-cell">ไม่มีสาขาในตัวกรองนี้</td></tr>{% endfor %}
+        </tbody></table></div>
+      </section>
+      <section class="panel table-panel">
+        <div class="panel-heading"><div><h2>สถานะรายบัณฑิต</h2><p>ข้อมูลในรอบประเมินที่เลือก</p></div><span class="table-count">{{ graduates|length }} ราย</span></div>
+        <div class="table-scroll"><table class="data-table"><thead><tr><th>รหัสบัณฑิต</th><th>ชื่อในข้อมูลตัวอย่าง</th><th>สาขา</th><th>สถานะ</th><th>นายจ้าง</th></tr></thead><tbody>
+          {% for graduate in graduates %}<tr><td><code>{{ graduate.code }}</code></td><td>{{ graduate.full_name }}</td><td>{{ graduate.department.name }}</td><td>{% if graduate.id in submitted_ids %}<span class="status status-done">ประเมินแล้ว</span>{% else %}<span class="status status-pending">รอประเมิน</span>{% endif %}</td><td>{{ graduate.assignments[0].employer.name if graduate.assignments else "ยังไม่จับคู่" }}</td></tr>{% else %}<tr><td colspan="5" class="empty-cell">ไม่มีบัณฑิตในตัวกรองนี้</td></tr>{% endfor %}
+        </tbody></table></div>
+      </section>
+      <section class="panel table-panel">
+        <div class="panel-heading"><div><h2>ลิงก์แบบประเมินสำหรับทดลอง</h2><p>แต่ละลิงก์จำกัดสาขา นายจ้าง และรายชื่อบัณฑิตที่ได้รับมอบหมาย</p></div><span class="table-count">{{ survey_links|length }} ลิงก์</span></div>
+        <div class="table-scroll"><table class="data-table"><thead><tr><th>สาขา</th><th>นายจ้าง</th><th>ลิงก์</th><th></th></tr></thead><tbody>
+          {% for link in survey_links %}<tr><td>{{ link.department.name }}</td><td>{{ link.employer.name }}</td><td><code>/survey/{{ link.token }}</code></td><td><a class="button button-secondary mini-button" href="{{ url_for('survey', token=link.token) }}" target="_blank" rel="noopener">เปิดฟอร์ม</a></td></tr>{% else %}<tr><td colspan="4" class="empty-cell">ไม่มีลิงก์ในตัวกรองนี้</td></tr>{% endfor %}
+        </tbody></table></div>
+      </section>
+      {% endif %}
+      <footer class="admin-footer">ข้อมูลบนหน้านี้อ่านจากฐานข้อมูล MySQL · เพิ่มข้อมูลตั้งต้นเพื่อเริ่มใช้งาน Dashboard</footer>
+    </div>
+  </main>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+window.dashboardData = {
+  departments: {{ dept_rows|tojson }},
+  faculties: {{ faculty_rows|tojson }},
+  reportMode: {{ report_mode|tojson }}
+};
+</script>
+<script src="{{ url_for('static', filename='charts.js') }}"></script>
+{% endblock %}
