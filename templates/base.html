@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link href="{{ url_for('static', filename='app.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='app.css', v='mobile-20261110') }}" rel="stylesheet">
   {% block head %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}">
@@ -15,7 +15,11 @@
     {% if messages %}
       <div class="flash-stack" aria-live="polite">
         {% for category, message in messages %}
-          <div class="flash flash-{{ category }}">{{ message }}</div>
+          {% if category == 'link-created' %}
+            <a class="flash flash-link-created" href="#created-links">{{ message }}</a>
+          {% else %}
+            <div class="flash flash-{{ category }}">{{ message }}</div>
+          {% endif %}
         {% endfor %}
       </div>
     {% endif %}

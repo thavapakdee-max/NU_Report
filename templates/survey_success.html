@@ -5,7 +5,7 @@
   <div class="success-mark">✓</div>
   <span class="eyebrow">SUBMITTED</span>
   <h1>ส่งแบบประเมินสำเร็จ</h1>
-  <p>บันทึกผลของ <strong>{{ graduate.code }}</strong> แล้ว</p>
-  <a class="button button-primary" href="{{ url_for('survey', token=link.token) }}">กลับไปยังรายชื่อบัณฑิต</a>
+  <p>{% if graduate %}บันทึกผลการประเมินของ <strong>{{ graduate.code }}</strong> แล้ว{% else %}บันทึกผลการประเมินหลักสูตร <strong>{{ link.department.name }}</strong> แล้ว{% endif %}</p>
+  <a class="button button-primary" href="{{ url_for('survey', token=link.token) }}">กลับไปยังแบบประเมิน</a>
 </main>
 {% endblock %}

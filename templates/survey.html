@@ -1,19 +1,19 @@
 {% extends "base.html" %}
-{% block title %}แบบประเมินนายจ้าง · {{ link.department.name }}{% endblock %}
+{% block title %}แบบประเมินหลักสูตร {{ link.department.name }} · {{ 'ปริญญาเอก' if link.department.degree_level == 'Doctorate' else 'ปริญญาโท' }}{% endblock %}
 {% block body_class %}survey-page{% endblock %}
 {% block content %}
 <header class="survey-header">
-  <a href="{{ url_for('home') }}" class="survey-brand"><img class="brand-seal logo-image" src="{{ url_for('static', filename='images/logo.png') }}" alt="ตรามหาวิทยาลัยนเรศวร"><div><strong>บัณฑิตวิทยาลัย</strong><span>มหาวิทยาลัยนเรศวร</span></div></a>
-  <div class="survey-context"><span>รอบประเมิน {{ link.round.academic_year }}</span><b>{{ link.department.name }}</b></div>
+  <a href="{{ url_for('home') }}" class="survey-brand"><img class="brand-seal logo-image" src="{{ url_for('static', filename='images/logo.png', v='20261110') }}" alt="ตรามหาวิทยาลัยนเรศวร"><div><strong>บัณฑิตวิทยาลัย</strong><span>มหาวิทยาลัยนเรศวร</span></div></a>
+  <div class="survey-context"><span>รอบประเมิน {{ link.round.academic_year }}</span><b>หลักสูตร {{ link.department.name }}</b><span>{{ 'ปริญญาเอก' if link.department.degree_level == 'Doctorate' else 'ปริญญาโท' }}</span><span>{{ link.department.faculty.name }}</span></div>
 </header>
 <main class="survey-main">
   <div class="survey-intro">
     <span class="eyebrow">EMPLOYER EVALUATION</span>
     <h1>แบบประเมินความพึงพอใจ<br>ของนายจ้างต่อบัณฑิต</h1>
-    <p>กรุณากรอกข้อมูลและประเมินบัณฑิตที่ได้รับมอบหมาย</p>
+    <p>{% if individual_mode %}กรุณากรอกข้อมูลและประเมินบัณฑิตที่ได้รับมอบหมาย{% else %}แบบประเมินสำหรับหลักสูตร {{ link.department.name }} ({{ 'ปริญญาเอก' if link.department.degree_level == 'Doctorate' else 'ปริญญาโท' }}){% endif %}</p>
   </div>
   {% if preview_mode %}<div class="preview-banner"><strong>หน้าดูตัวอย่าง</strong><span>ข้อมูลบัณฑิตและรายการประเมินใช้เพื่อดูหน้าจอเท่านั้น แบบฟอร์มนี้ไม่ส่งหรือบันทึกข้อมูล</span></div>{% endif %}
-  {% if not graduates %}
+  {% if individual_mode and not graduates %}
     <section class="empty-state">
       <div class="empty-icon">✓</div>
       <h2>ไม่มีแบบประเมินที่รอดำเนินการ</h2>
@@ -37,7 +37,8 @@
       </div>
     </section>
     <section class="survey-step" data-step="2" hidden>
-      <div class="step-heading"><span>02</span><div><h2>เลือกบัณฑิตที่ประเมิน</h2><p>แสดงเฉพาะรหัสที่ได้รับมอบหมายให้หน่วยงานของท่าน</p></div></div>
+      <div class="step-heading"><span>02</span><div><h2>{% if individual_mode %}เลือกบัณฑิตที่ประเมิน{% else %}ข้อมูลบัณฑิตในหลักสูตร{% endif %}</h2><p>{% if individual_mode %}แสดงเฉพาะบัณฑิตที่ได้รับมอบหมายให้หน่วยงานของท่าน{% else %}ขณะนี้ประเมินภาพรวมของหลักสูตร ยังไม่ระบุรายบุคคล{% endif %}</p></div></div>
+      {% if individual_mode %}
       <label class="field-group">รหัสบัณฑิต<select name="graduate_id" id="graduateSelect" required>
         <option value="">เลือกบัณฑิต</option>
         {% for graduate in graduates %}<option value="{{ graduate.id }}" data-code="{{ graduate.code }}" data-name="{{ graduate.full_name }}" data-job="{{ graduate.job_title or 'ไม่ระบุ' }}">{{ graduate.code }} · {{ graduate.full_name }}</option>{% endfor %}
@@ -47,14 +48,17 @@
         <div><span>ชื่อบัณฑิต</span><strong id="previewName">—</strong></div>
         <div><span>ตำแหน่งงาน</span><strong id="previewJob">—</strong></div>
       </div>
-      <div class="notice-box"><span>i</span><p>ชุดคำถามจะเลือกตามสาขาวิชาโดยอัตโนมัติ ไม่ต้องเลือกแบบประเมินเอง</p></div>
+      {% else %}
+      <div class="notice-box"><span>i</span><p>แบบประเมินนี้ใช้ชุดคำถามของหลักสูตร {{ link.department.name }} เมื่อมีฐานข้อมูลบัณฑิต ระบบจะเพิ่มการเลือกประเมินรายบุคคลในภายหลัง</p></div>
+      <label class="field-group">ตำแหน่งงานของบัณฑิตที่ประเมิน<input name="evaluated_job_title" required placeholder="เช่น นักวิจัย"></label>
+      {% endif %}
       <div class="form-grid">
         <label class="field-group">ระยะเวลาที่ทำงานในหน่วยงาน<select name="work_duration" required><option value="">เลือกระยะเวลา</option><option>ต่ำกว่า 3 เดือน</option><option>3 เดือน แต่ไม่ถึง 6 เดือน</option><option>6 เดือนขึ้นไป</option></select></label>
         <label class="field-group">ทำงานตรงหรือสอดคล้องกับสาขาที่จบหรือไม่<select name="job_alignment" required><option value="">เลือกคำตอบ</option><option>ตรงสาขา</option><option>ไม่ตรงสาขา</option></select></label>
       </div>
     </section>
     <section class="survey-step" data-step="3" hidden>
-      <div class="step-heading"><span>03</span><div><h2>ผลการเรียนรู้ตามหลักสูตร</h2><p>ตัวอย่างหน้าจอ · กำหนดข้อความจริงภายหลัง</p></div></div>
+      <div class="step-heading"><span>03</span><div><h2>ผลการเรียนรู้ตามหลักสูตร</h2><p>คำถามตามหลักสูตร {{ link.department.name }}</p></div></div>
       <div class="rating-guide"><span>5 มากที่สุด</span><span>4 มาก</span><span>3 ปานกลาง</span><span>2 น้อย</span><span>1 น้อยที่สุด</span></div>
       {% for question in section3_questions %}
       <fieldset class="rating-question"><legend><b>{{ loop.index }}.</b> {{ question.text }}</legend><div class="rating-options">
@@ -63,7 +67,7 @@
       {% endfor %}
     </section>
     <section class="survey-step" data-step="4" hidden>
-      <div class="step-heading"><span>04</span><div><h2>สมรรถนะหลัก 5 ด้าน</h2><p>ตัวอย่างหน้าจอ · เลือกคะแนน 1–5 หรือไม่ประสงค์ประเมิน</p></div></div>
+      <div class="step-heading"><span>04</span><div><h2>สมรรถนะหลัก 5 ด้าน</h2><p>เลือกคะแนน 1–5 หรือไม่ประสงค์ประเมิน</p></div></div>
       <div class="rating-guide"><span>5 มากที่สุด</span><span>4 มาก</span><span>3 ปานกลาง</span><span>2 น้อย</span><span>1 น้อยที่สุด</span><span>N/A</span></div>
       {% for group, questions in section4_groups.items() %}
       <section class="competency-group"><h3><span>{{ "%02d"|format(loop.index) }}</span>{{ group }}</h3>
@@ -75,7 +79,7 @@
         {% endfor %}
       </section>
       {% endfor %}
-      <section class="review-box"><h3>ตรวจสอบก่อนส่ง</h3><p id="reviewGraduate">ยังไม่ได้เลือกบัณฑิต</p><p>เมื่อกดยืนยันส่ง ระบบจะบันทึกผลและไม่สามารถส่งซ้ำสำหรับบัณฑิตคนเดิมในรอบนี้</p></section>
+      <section class="review-box"><h3>ตรวจสอบก่อนส่ง</h3><p id="reviewGraduate">{% if individual_mode %}ยังไม่ได้เลือกบัณฑิต{% else %}แบบประเมินภาพรวมหลักสูตร {{ link.department.name }}{% endif %}</p><p>เมื่อกดยืนยันส่ง ระบบจะบันทึกผลการประเมินของหลักสูตรนี้</p></section>
     </section>
     <section class="survey-step" data-step="5" hidden>
       <div class="step-heading"><span>05</span><div><h2>ข้อคิดเห็นและข้อเสนอแนะ</h2><p>ความคิดเห็นของนายจ้างหรือผู้ใช้บัณฑิต · ตอบตามความสมัครใจ</p></div></div>
@@ -100,7 +104,7 @@
         <h3>4. คุณลักษณะของบัณฑิตที่พึงประสงค์ตามความต้องการของท่านที่แตกต่างจากที่กล่าวมา</h3>
         <label class="field-group">คุณลักษณะที่ต้องการ<textarea name="section5_desired_attributes" rows="3" maxlength="5000" placeholder="ระบุคุณลักษณะอื่นที่ท่านต้องการ"></textarea></label>
       </section>
-      <section class="review-box"><h3>ตรวจสอบก่อนส่ง</h3><p id="reviewGraduateStep5">ยังไม่ได้เลือกบัณฑิต</p><p>เมื่อกดยืนยัน ระบบจะบันทึกคะแนนและข้อคิดเห็นของท่าน</p></section>
+      <section class="review-box"><h3>ตรวจสอบก่อนส่ง</h3><p id="reviewGraduateStep5">{% if individual_mode %}ยังไม่ได้เลือกบัณฑิต{% else %}แบบประเมินภาพรวมหลักสูตร {{ link.department.name }}{% endif %}</p><p>เมื่อกดยืนยัน ระบบจะบันทึกคะแนนและข้อคิดเห็นของท่าน</p></section>
     </section>
     <div class="wizard-actions">
       <button class="button button-secondary" type="button" id="previousStep" hidden>ย้อนกลับ</button>
